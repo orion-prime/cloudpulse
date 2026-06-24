@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password | CloudPulse</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="center">
+  <div class="auth-card">
+    <h1 class="brand">CLOUDPULSE</h1>
+
+    <p class="subtitle">
+      Securely reset your password
+    </p>
+
+    <div class="reset-form">
+      <input type="password" id="pass" placeholder="Enter new password" required>
+      <button onclick="reset()" style="width: 100%; margin-top: 20px;">Update Password</button>
+    </div>
+
+    <p class="link">
+      Remembered?
+      <a href="/login.html">Return to Login</a>
+    </p>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    const token = new URLSearchParams(window.location.search).get("token");
+    const toastContainer = document.getElementById("toastContainer");
+
+    function showToast(title, message, type = "error") {
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      
+      const icon = type === "error" ? "❌" : "✅";
+      
+      toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-content">
+          <div class="toast-title">${title}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+      `;
+      
+      toastContainer.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add("show"), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }, 4000);
+    }
+
+    async function reset() {
+      const password = document.getElementById("pass").value;
+      if (!password) {
+        showToast("Error", "Please enter a valid password.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/submit-reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password })
+        });
+        
+        if (res.ok) {
+          showToast("Success", "Password updated! Redirecting...", "success");
+          setTimeout(() => {
+            window.location.href = "/login.html";
+          }, 2000);
+        } else {
+          showToast("Failed", "Invalid or expired reset token.");
+        }
+      } catch (err) {
+        showToast("Error", "Something went wrong.");
+      }
+    }
+  </script>
+</body>
+</html>

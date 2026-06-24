@@ -1,0 +1,133 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLOUDPULSE | Sign Up</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="center">
+
+  <div class="auth-card" id="signupCard">
+    <h1 class="brand">CLOUDPULSE</h1>
+    <p class="subtitle">Create your CloudPulse account</p>
+
+    <form id="signupForm">
+      <input name="username" placeholder="Username" required>
+      <input name="password" type="password" placeholder="Password" required>
+      <input id="signupEmail" name="email" type="email" placeholder="Gmail address" required>
+      <button type="submit">Create Account</button>
+    </form>
+    
+    <p class="link">
+      Already registered? <a href="/login.html">Login</a>
+    </p>
+  </div>
+
+  <div class="auth-card" id="otpCard" style="display: none;">
+    <h1 class="brand">VERIFY EMAIL</h1>
+    <p class="subtitle">Enter the 6-digit code sent to <br><b id="displayEmail"></b></p>
+
+    <form id="otpForm">
+      <input id="otpInput" type="text" placeholder="######" maxLength="6" style="text-align: center; letter-spacing: 8px; font-size: 24px;" required>
+      <button type="submit">Verify & Register</button>
+    </form>
+    
+    <p class="link">
+      Didn't get the code? <a href="#" onclick="resendOTP()">Resend</a>
+    </p>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    const signupForm = document.getElementById("signupForm");
+    const otpForm = document.getElementById("otpForm");
+    const signupCard = document.getElementById("signupCard");
+    const otpCard = document.getElementById("otpCard");
+    const toastContainer = document.getElementById("toastContainer");
+
+    let userEmail = "";
+
+    function showToast(title, message, type = "error") {
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      const icon = type === "error" ? "❌" : "✅";
+      toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-content">
+          <div class="toast-title">${title}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+      `;
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.classList.add("show"), 10);
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }, 4000);
+    }
+
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(signupForm);
+      const data = Object.fromEntries(formData.entries());
+      userEmail = data.email;
+
+      try {
+        const res = await fetch("/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          showToast("OTP Sent", "Check your email for verification code.", "success");
+          document.getElementById("displayEmail").innerText = userEmail;
+          signupCard.style.display = "none";
+          otpCard.style.display = "block";
+        } else {
+          showToast("Signup Failed", result.error);
+        }
+      } catch (err) {
+        showToast("Error", "Server unreachable.");
+      }
+    });
+
+    otpForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const otp = document.getElementById("otpInput").value;
+
+      try {
+        const res = await fetch("/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail, otp })
+        });
+        const result = await res.json();
+        if (res.ok) {
+          showToast("Success", "Email verified! Redirecting...", "success");
+          setTimeout(() => window.location.href = result.redirect, 1500);
+        } else {
+          showToast("Verification Failed", result.error);
+        }
+      } catch (err) {
+        showToast("Error", "Server unreachable.");
+      }
+    });
+
+    async function resendOTP() {
+      try {
+        const res = await fetch("/resend-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail })
+        });
+        if (res.ok) showToast("Sent", "New OTP dispatched!", "success");
+      } catch (e) {}
+    }
+  </script>
+
+</body>
+</html>

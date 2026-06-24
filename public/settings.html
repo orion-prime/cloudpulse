@@ -1,0 +1,16 @@
+<button onclick="requestReset()">Reset Password via Email</button>
+
+<script>
+function requestReset() {
+  const email = prompt("Enter your registered email:");
+  if (!email) return;
+
+  fetch("/request-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  })
+  .then(res => res.json())
+  .then(() => alert("Reset email sent!"));
+}
+</script>

@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+server/database.db
+server/node_modules/
+ai_engine/.venv/
+ai_engine/__pycache__/
+.git/
+.gitignore
+uploads/*
+*.log
+.vscode/
+.idea/

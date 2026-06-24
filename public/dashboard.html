@@ -1,0 +1,254 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLOUDPULSE | Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <div class="user-info">
+    Logged in as <b id="loggedUser"></b>
+  </div>
+
+</head>
+
+<body>
+
+<div class="app-layout">
+
+  <!-- ================= SIDEBAR ================= -->
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2 class="logo">CLOUDPULSE</h2>
+      <button class="collapse-btn" id="collapseBtn" onclick="toggleSidebar()" title="Collapse Sidebar">◀</button>
+    </div>
+
+    <nav>
+      <a class="nav-item active" onclick="showView('overview', this)">
+        <span>📊</span><span class="nav-label">Overview</span>
+      </a>
+      <a class="nav-item" onclick="showView('anomalies', this)">
+        <span>🚨</span><span class="nav-label">Anomalies</span>
+      </a>
+      <a class="nav-item" onclick="showView('forecast', this)">
+        <span>📈</span><span class="nav-label">Forecast</span>
+      </a>
+      <a class="nav-item" onclick="showView('history', this)">
+        <span>📜</span><span class="nav-label">History</span>
+      </a>
+      
+      <!-- Foldable Group for Settings and Logout -->
+      <div class="sidebar-accordion" id="sidebarAccordion">
+        <div class="accordion-header" onclick="toggleAccordion()" title="Settings & Session">
+          <span style="display: flex; align-items: center; gap: 12px;">
+            <span>⚙️</span><span class="nav-label">Account</span>
+          </span>
+          <span class="accordion-arrow nav-label">▼</span>
+        </div>
+        <div class="accordion-content">
+          <a class="nav-item sub-item" onclick="showView('settings', this)">
+            <span>🔧</span><span class="nav-label">Settings</span>
+          </a>
+          <a href="/logout" class="logout-btn sub-item">
+            <span>🚪</span><span class="nav-label">Logout</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>Cost Intelligence Dashboard</h1>
+        <p>AI-driven cloud cost monitoring</p>
+      </div>
+      <button class="dark-toggle" onclick="toggleDark()">🌙</button>
+    </header>
+
+    <!-- Upload -->
+    <section class="upload">
+      <label class="upload-btn" id="uploadLabel">
+        📂 Upload Billing CSV
+        <input type="file" id="file" hidden>
+      </label>
+
+      <span id="fileStatus" class="file-status">No file selected</span>
+
+      <button class="analyze-btn" onclick="analyze()">⚡ Analyze Costs</button>
+    </section>
+
+    <!-- ================= OVERVIEW ================= -->
+    <section id="overview" class="view active-view">
+
+      <section class="metrics">
+        <div class="metric">Total Spend<br><b id="total">₹0</b></div>
+        <div class="metric warn">Anomalous Spend<br><b id="anomaly">₹0</b></div>
+        <div class="metric success">Potential Savings<br><b id="savings">₹0</b></div>
+      </section>
+
+      <section class="charts">
+        <canvas id="costChart"></canvas>
+      </section>
+
+      <div class="summary" id="summary"></div>
+
+    </section>
+
+    <!-- ================= ANOMALIES ================= -->
+    <section id="anomalies" class="view">
+
+      <table id="results">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Cost (₹)</th>
+            <th>Savings (₹)</th>
+            <th>Severity</th>
+            <th>🔬 XAI Reason (SHAP)</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+    </section>
+
+    <!-- Placeholder views -->
+    <section id="forecast" class="view">
+      <h2>📈 Cost Forecast</h2>
+
+      <div class="metric success">
+        Predicted Next Period Spend<br>
+        <b id="forecastValue">₹ 0</b>
+      </div>
+
+      <div class="charts">
+        <canvas id="forecastChart"></canvas>
+      </div>
+      <div class="summary">
+        <h3>📅 30-Day Cost Forecast (Daily)</h3>
+
+        <table id="forecastTable">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Predicted Cost (₹)</th>
+              </tr>
+            </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <section id="settings" class="view">
+      <div class="settings-container">
+        <!-- Profile Card -->
+        <div class="settings-card">
+          <h2>👤 Profile Information</h2>
+          <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 24px;">
+            Update your account's profile information and email address.
+          </p>
+          
+          <div class="settings-group">
+            <label>Username</label>
+            <input id="setUsername" disabled title="Username cannot be changed">
+          </div>
+
+          <div class="settings-group">
+            <label>Email Address</label>
+            <input id="setEmail" type="email" disabled>
+          </div>
+
+          <div class="settings-group">
+            <label>Full Name</label>
+            <input id="setName" type="text" placeholder="Enter your full name" disabled>
+          </div>
+
+          <div class="settings-group">
+            <label>Contact Number</label>
+            <input id="setContact" type="text" placeholder="Enter contact number" disabled>
+          </div>
+
+          <div class="settings-footer">
+            <button id="editBtn" class="btn-secondary" onclick="enableEdit()">Edit Profile</button>
+            <button id="saveBtn" class="btn-primary" onclick="saveSettings()" style="display:none;">
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+        <!-- Security & Preferences Card -->
+        <div class="settings-card">
+          <h2>🛡️ Security & Preferences</h2>
+          <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 24px;">
+            Manage your account security and dashboard preferences.
+          </p>
+
+          <div class="settings-group">
+            <label>Dashboard Theme</label>
+            <select id="themeSelect" onchange="setTheme()" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc;">
+              <option value="light">Standard Light</option>
+              <option value="dark">Professional Dark</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label>Authentication</label>
+            <p style="font-size: 0.875rem; color: #64748b; margin-top: 5px;">
+              Request a secure password reset link to be sent to your registered email address.
+            </p>
+            <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="resetPassword()">
+              🔐 Send Reset Link
+            </button>
+          </div>
+
+          <div class="danger-zone">
+            <h3>Critical Actions</h3>
+            <p>Once you delete your history or account, there is no going back. Please be certain.</p>
+            <button class="btn-secondary" style="color: #dc2626; border-color: #fecaca; width: 100%;" onclick="clearHistory()">
+              Clear Analysis History
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </section>
+
+
+    <section id="history" class="view">
+      <h2>📜 Analysis History</h2>
+
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Total Spend (₹)</th>
+            <th>Estimated Savings (₹)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+
+
+
+  </main>
+</div>
+<div id="aiPanel" class="ai-panel"></div>
+
+
+
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="/dashboard.js"></script>
+</body>
+</html>
