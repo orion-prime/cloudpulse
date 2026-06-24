@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 
 async function generateLLMInsight(analysis) {
   const prompt = `
